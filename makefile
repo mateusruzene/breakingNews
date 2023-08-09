@@ -8,7 +8,7 @@ CC = gcc
 # arquivos-objeto
 	objects = jornal.o
      
-jornal: jornal.o libfila.o
+jornal: jornal.o 
 	$(CC) -o jornal jornal.o $(LDFLAGS)
 
 jornal.o: jornal.c

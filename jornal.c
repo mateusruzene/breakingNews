@@ -1,13 +1,12 @@
 #include <stdio.h>
-#include <string.h>
-#include <strings.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct nodo_f
 {
-    char *titulo ;
-    char *texto ;
-    int idade ;
+    char *titulo;
+    char *texto;
+    int idade;
     struct nodo_f *prox;
 };
 typedef struct nodo_f nodo_f_t;
@@ -44,7 +43,8 @@ fila_t *destroi_fila(fila_t *f)
 {
     nodo_f_t *aux;
 
-    if (vazia_fila(f)){
+    if (vazia_fila(f))
+    {
         free(f);
         f = NULL;
         return f;
@@ -65,17 +65,18 @@ fila_t *destroi_fila(fila_t *f)
     return f;
 }
 
-void requisita(char *titulo, char *texto){
-    getchar();
+void imprime_fila(fila_t *f)
+{
+    nodo_f_t *aux;
 
-    printf("\nDigite o título: ");
-    scanf ("%33s", titulo) ;
-    printf("Digite o texto: ");
-    scanf ("%513s", texto) ;
-
-    printf("\nTítulo 1: %s ", titulo);
-    printf("Texto 1: %s ", texto);
-
+    aux = f->ini;
+    while (aux)
+    {
+        printf("\n%s\n", aux->titulo);
+        printf("%s\n", aux->texto);
+        printf("== \n");
+        aux = aux->prox;
+    }
 }
 
 int insere_fila(fila_t *f, char *titulo, char *texto)
@@ -87,18 +88,11 @@ int insere_fila(fila_t *f, char *titulo, char *texto)
         if (!(f->ini = malloc(sizeof(nodo_f_t))))
             return 0;
 
-        (f->ini)->titulo = (char*) malloc(33 *sizeof(char));
-        (f->ini)->texto = (char*) malloc(513 *sizeof(char));
+        (f->ini)->titulo = (char *)malloc(33 * sizeof(char));
+        (f->ini)->texto = (char *)malloc(513 * sizeof(char));
 
-        strcpy(titulo, (f->ini)->titulo);
-        strcpy(texto, (f->ini)->texto);
-
-        printf("\nTitulo: %s\n", titulo);
-        printf("Texto: %s\n", texto);
-
-        printf("\n(f->ini)->titulo: %s\n", (f->ini)->titulo);
-        printf("(f->ini)->texto: %s\n", (f->ini)->texto);
-
+        strcpy((f->ini)->titulo, titulo);
+        strcpy((f->ini)->texto, texto);
 
         (f->ini)->idade = 0;
         (f->ini)->prox = NULL;
@@ -111,12 +105,12 @@ int insere_fila(fila_t *f, char *titulo, char *texto)
         if (!(novo = malloc(sizeof(nodo_f_t))))
             return 0;
 
-        novo->titulo  = (char*) malloc(33 *sizeof(char));
-        novo->texto = (char*) malloc(513 *sizeof(char));
+        novo->titulo = (char *)malloc(33 * sizeof(char));
+        novo->texto = (char *)malloc(513 * sizeof(char));
 
-        strcpy(titulo, novo->titulo);
-        strcpy(texto, novo->texto);
-        
+        strcpy(novo->titulo, titulo);
+        strcpy(novo->texto, texto);
+
         novo->idade = 0;
         novo->prox = NULL;
         (f->fim)->prox = novo;
@@ -127,56 +121,155 @@ int insere_fila(fila_t *f, char *titulo, char *texto)
     }
 }
 
-void imprime_fila(fila_t *f)
+int retira_fila(fila_t *f)
+{
+    nodo_f_t *primeiroElemento;
+
+    if (vazia_fila(f))
+        return 0;
+
+    primeiroElemento = f->ini;
+
+    f->ini = f->ini->prox;
+    (f->tamanho)--;
+
+    free(primeiroElemento->titulo);
+    free(primeiroElemento->texto);
+    free(primeiroElemento);
+
+    return 1;
+}
+
+void requisita(char *titulo, char *texto)
+{
+    getchar();
+
+    printf("\nDigite o título: ");
+    fgets(titulo, 33, stdin);
+    printf("Digite o texto: ");
+    fgets(texto, 513, stdin);
+}
+
+void aumenta_idade(fila_t *f)
 {
     nodo_f_t *aux;
+
+    if (vazia_fila(f))
+        return;
 
     aux = f->ini;
     while (aux)
     {
-        printf("%s \n", aux->titulo);
-        printf("%s \n", aux->texto);
-        printf("== \n");
+        aux->idade++;
         aux = aux->prox;
     }
-
-    free(aux);
 }
 
-void fecharEdicao(fila_t *breakingNews, fila_t *informes, fila_t *edicao){
+fila_t *remove_invalidas(fila_t *f)
+{
+    fila_t *aux;
 
+    if (vazia_fila(f))
+        return f;
+
+    aux = f;
+    while (aux->ini->idade > 3)
+    {
+        retira_fila(aux);
+    }
+
+    return aux;
 }
 
-void imprimeOpcoesPrograma(){
+void cadastrarNoticia(fila_t *breakingNews, fila_t *informes)
+{
+    int opcaoTexto;
+
+    char *titulo = (char *)malloc(33 * sizeof(char));
+    char *texto = (char *)malloc(513 * sizeof(char));
+
+    printf("\n(0) Breaking news \n");
+    printf("(1) Informe \n");
+    scanf("%d", &opcaoTexto);
+    requisita(titulo, texto);
+
+    if (opcaoTexto == 0)
+        insere_fila(breakingNews, titulo, texto);
+    else
+        insere_fila(informes, titulo, texto);
+}
+
+fila_t *fecharEdicao(fila_t *breakingNews, fila_t *informes, fila_t *edicao)
+{
+    breakingNews = remove_invalidas(breakingNews);
+    informes = remove_invalidas(informes);
+
+    if (vazia_fila(breakingNews) && vazia_fila(informes))
+    {
+        printf("\nEsta edição foi pulada por falta de notícias!\n");
+        return edicao;
+    }
+    else if (!vazia_fila(breakingNews) && breakingNews->tamanho >= 2)
+    {
+        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
+        retira_fila(breakingNews);
+
+        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
+        retira_fila(breakingNews);
+
+        return edicao;
+    }
+    else if (breakingNews->tamanho == 1)
+    {
+        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
+        retira_fila(breakingNews);
+        if (!vazia_fila(informes) && informes->tamanho >= 1)
+        {
+            insere_fila(edicao, informes->ini->titulo, informes->ini->texto);
+            retira_fila(informes);
+        }
+
+        return edicao;
+    }
+    else if (informes->tamanho >= 2)
+    {
+        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
+        retira_fila(breakingNews);
+
+        insere_fila(edicao, informes->ini->titulo, informes->ini->texto);
+        retira_fila(informes);
+
+        return edicao;
+    }
+    else if (informes->tamanho == 1)
+    {
+        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
+        retira_fila(breakingNews);
+
+        return edicao;
+    }
+    return edicao;
+}
+
+void imprimeOpcoesPrograma()
+{
     printf("\n(1) Cadastrar notícia \n");
     printf("(2) Fechar edição \n");
     printf("(3) Sair \n");
 }
 
-void opcoesPrograma(int opcao, fila_t *breakingNews, fila_t *informes, fila_t *edicao){
-    int opcaoTexto;
-    char *titulo = (char *) malloc(33 * sizeof(char));
-    char *texto = (char *) malloc(513 * sizeof(char));
-
-    switch (opcao){
+void opcoesPrograma(int opcao, fila_t *breakingNews, fila_t *informes, fila_t *edicao)
+{
+    switch (opcao)
+    {
     case 1:
-        printf("\n(0) Breaking news \n");
-        printf("(1) Informe \n");
-        scanf("%d", &opcaoTexto);
-        requisita(titulo, texto);
-        if(opcaoTexto == 0){
-            insere_fila(breakingNews, titulo, texto);
-            break;
-        }
-        insere_fila(informes, titulo, texto);
+        cadastrarNoticia(breakingNews, informes);
         break;
     case 2:
-        printf("Breaking News \n");
-        imprime_fila(breakingNews);
-        printf("Enformes \n");
-        imprime_fila(informes);
-        printf("Edicao \n");
+        fecharEdicao(breakingNews, informes, edicao);
         imprime_fila(edicao);
+        aumenta_idade(breakingNews);
+        aumenta_idade(informes);
         break;
     case 3:
         printf("\nFim!\n");
@@ -187,21 +280,26 @@ void opcoesPrograma(int opcao, fila_t *breakingNews, fila_t *informes, fila_t *e
     }
 }
 
-int main(){
+int main()
+{
     int opcao;
     fila_t *breakingNews, *informes, *edicao;
 
     breakingNews = cria_fila();
     informes = cria_fila();
-    edicao = cria_fila();
 
+    printf("informes %d", informes->tamanho);
 
-    while(opcao != 3){
+    while (opcao != 3)
+    {
+        edicao = cria_fila();
+
         imprimeOpcoesPrograma();
         scanf("%d", &opcao);
         opcoesPrograma(opcao, breakingNews, informes, edicao);
+
+        destroi_fila(edicao);
     }
-    
 
     destroi_fila(breakingNews);
     destroi_fila(informes);
