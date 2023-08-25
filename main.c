@@ -69,6 +69,9 @@ void imprime_fila(fila_t *f)
 {
     nodo_f_t *aux;
 
+    if (vazia_fila(f))
+        return;
+
     aux = f->ini;
     while (aux)
     {
@@ -173,7 +176,7 @@ fila_t *remove_invalidas(fila_t *f)
         return f;
 
     aux = f;
-    while (aux->ini->idade > 3)
+    while (!vazia_fila(aux) && aux->ini->idade > 3)
     {
         retira_fila(aux);
     }
@@ -197,12 +200,15 @@ void cadastrarNoticia(fila_t *breakingNews, fila_t *informes)
         insere_fila(breakingNews, titulo, texto);
     else
         insere_fila(informes, titulo, texto);
+
+    free(titulo);
+    free(texto);
 }
 
 fila_t *fecharEdicao(fila_t *breakingNews, fila_t *informes, fila_t *edicao)
 {
-    breakingNews = remove_invalidas(breakingNews);
-    informes = remove_invalidas(informes);
+    remove_invalidas(breakingNews);
+    remove_invalidas(informes);
 
     if (vazia_fila(breakingNews) && vazia_fila(informes))
     {
@@ -223,31 +229,27 @@ fila_t *fecharEdicao(fila_t *breakingNews, fila_t *informes, fila_t *edicao)
     {
         insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
         retira_fila(breakingNews);
-        if (!vazia_fila(informes) && informes->tamanho >= 1)
+
+        if (informes->tamanho >= 1)
         {
             insere_fila(edicao, informes->ini->titulo, informes->ini->texto);
             retira_fila(informes);
         }
-
-        return edicao;
     }
     else if (informes->tamanho >= 2)
     {
-        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
-        retira_fila(breakingNews);
-
         insere_fila(edicao, informes->ini->titulo, informes->ini->texto);
         retira_fila(informes);
 
-        return edicao;
+        insere_fila(edicao, informes->ini->titulo, informes->ini->texto);
+        retira_fila(informes);
     }
     else if (informes->tamanho == 1)
     {
-        insere_fila(edicao, breakingNews->ini->titulo, breakingNews->ini->texto);
-        retira_fila(breakingNews);
-
-        return edicao;
+        insere_fila(edicao, informes->ini->titulo, informes->ini->texto);
+        retira_fila(informes);
     }
+
     return edicao;
 }
 
@@ -282,13 +284,11 @@ void opcoesPrograma(int opcao, fila_t *breakingNews, fila_t *informes, fila_t *e
 
 int main()
 {
-    int opcao;
+    int opcao = 0;
     fila_t *breakingNews, *informes, *edicao;
 
     breakingNews = cria_fila();
     informes = cria_fila();
-
-    printf("informes %d", informes->tamanho);
 
     while (opcao != 3)
     {
@@ -303,7 +303,6 @@ int main()
 
     destroi_fila(breakingNews);
     destroi_fila(informes);
-    destroi_fila(edicao);
 
     return 0;
 }
